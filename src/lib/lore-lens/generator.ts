@@ -24,30 +24,35 @@ const questionSchema = z.object({
     .length(10),
 });
 
-const jsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  required: ["questions"],
-  properties: {
-    questions: {
-      type: "array",
-      minItems: 10,
-      maxItems: 10,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["prompt", "category", "sourceFileId", "rationale", "gapType"],
-        properties: {
-          prompt: { type: "string" },
-          category: { type: "string", enum: [...LORE_CATEGORIES] },
-          sourceFileId: { type: "string" },
-          rationale: { type: "string" },
-          gapType: { type: "string" },
+export function buildQuestionJsonSchema(primarySourceIds: string[]) {
+  if (primarySourceIds.length === 0) {
+    throw new Error("At least one primary source is required for generation");
+  }
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["questions"],
+    properties: {
+      questions: {
+        type: "array",
+        minItems: 10,
+        maxItems: 10,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["prompt", "category", "sourceFileId", "rationale", "gapType"],
+          properties: {
+            prompt: { type: "string" },
+            category: { type: "string", enum: [...LORE_CATEGORIES] },
+            sourceFileId: { type: "string", enum: primarySourceIds },
+            rationale: { type: "string" },
+            gapType: { type: "string" },
+          },
         },
       },
     },
-  },
-};
+  };
+}
 
 function noteBlock(note: ScannedNote, maxContentChars: number) {
   const content =
@@ -111,6 +116,7 @@ export async function generateQuestions(args: {
   priorPrompts: string[];
   priorFingerprints: Set<string>;
   draftAnswers: Array<{ prompt: string; body: string }>;
+  recordUsage?: (usage: { inputTokens: number; outputTokens: number }) => Promise<void>;
 }) {
   const { input, estimatedTokens } = buildGenerationInput(args);
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
@@ -126,7 +132,7 @@ export async function generateQuestions(args: {
         type: "json_schema",
         name: "lore_lens_questions",
         strict: true,
-        schema: jsonSchema,
+        schema: buildQuestionJsonSchema(args.primaryNotes.map((note) => note.id)),
       },
     },
     instructions: `You are Lore Lens, a focused worldbuilding editor for a solo tabletop RPG game master.
@@ -146,6 +152,15 @@ For balanced focus, use at least two primary sources from each non-empty area: c
 Treat saved app answers as non-canon draft ideas that cannot override Obsidian.
 The rationale must name the observed gap without quoting private note text at length.`,
     input,
+  });
+
+  const usage = response.usage ?? {
+    input_tokens: estimatedTokens,
+    output_tokens: MAX_OUTPUT_TOKENS,
+  };
+  await args.recordUsage?.({
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
   });
 
   if (!response.output_text) throw new Error("OpenAI returned no structured output");
@@ -175,10 +190,6 @@ The rationale must name the observed gap without quoting private note text at le
     }
   }
 
-  const usage = response.usage ?? {
-    input_tokens: estimatedTokens,
-    output_tokens: MAX_OUTPUT_TOKENS,
-  };
   return {
     questions: parsed.questions as GeneratedQuestion[],
     inputTokens: usage.input_tokens,

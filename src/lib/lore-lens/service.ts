@@ -25,7 +25,7 @@ export function utcMonthStart(now = new Date()) {
 }
 
 export async function getMonthlyUsageMicros() {
-  const aggregate = await db.loreBatch.aggregate({
+  const aggregate = await db.loreModelUsage.aggregate({
     where: { createdAt: { gte: utcMonthStart() } },
     _sum: { costMicros: true },
   });
@@ -167,6 +167,17 @@ export async function generateLoreBatch(focus: LoreFocus) {
       priorPrompts: previous.map((question) => question.prompt),
       priorFingerprints: new Set(previous.map((question) => question.fingerprint)),
       draftAnswers: draftAnswers.map((answer) => ({ prompt: answer.card.prompt, body: answer.body })),
+      recordUsage: async ({ inputTokens, outputTokens }) => {
+        await db.loreModelUsage.create({
+          data: {
+            model: LORE_MODEL,
+            inputTokens,
+            outputTokens,
+            costMicros: calculateCostMicros(inputTokens, outputTokens),
+            result: "response_received",
+          },
+        });
+      },
     });
     const costMicros = calculateCostMicros(generated.inputTokens, generated.outputTokens);
     const contextIds = [...new Set([...primaryNotes, ...relatedNotes].map((note) => note.id))];

@@ -82,6 +82,18 @@ model LoreGenerationLock {
   expiresAt DateTime
 }
 
+model LoreModelUsage {
+  id           String   @id @default(cuid())
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costMicros   Int
+  result       String
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model LoreQuestion {
   id               String         @id @default(cuid())
   batchId          String
