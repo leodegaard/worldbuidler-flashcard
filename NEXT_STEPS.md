@@ -10,10 +10,9 @@ Milestone 1 remains complete and live at
 `https://worldbuilding-flashcards.vercel.app`.
 
 Milestone 2, **Lore Lens**, is implemented on `codex/lore-lens` but is not yet
-production-ready because the Google OAuth client and OpenAI project key require
-owner-managed account setup. Do not merge the branch or mark milestone 2
-complete until the preview is connected to both services and the real-vault flow
-passes.
+production-ready because the OpenAI project key still requires owner-managed
+account setup. Do not merge the branch or mark milestone 2 complete until the
+preview is connected to Drive and OpenAI and the real-vault flow passes.
 
 The branch is pushed at commit `5429887`. A ready Vercel preview exists at
 `https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app`.
@@ -64,20 +63,19 @@ Implemented:
   Next.js/Prisma dependency trees. Suggested automated fixes incorrectly
   downgrade major framework versions, so no force-fix was applied.
 
-## Owner setup required
+## External service status
 
-### Google Cloud
+### Google Cloud — configured for deployed environments
 
-1. Create or select a Google Cloud project and enable Google Drive API.
-2. Configure an External OAuth consent screen for the owner's Google account.
-3. Create a Web application OAuth client.
-4. Add authorized redirect URIs:
-   - `http://localhost:3000/api/google/callback`
-   - `https://worldbuilding-flashcards.vercel.app/api/google/callback`
-   - `https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app/api/google/callback`
-5. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` directly to Vercel's
-   Production, Preview, and Development environments. Never commit them or send
-   them through a public channel.
+- The Drive API, OAuth consent configuration, read-only Drive scope, web client,
+  and all three authorized redirect URIs are configured.
+- `GOOGLE_CLIENT_ID` is present in Vercel Development, Preview, and Production.
+- `GOOGLE_CLIENT_SECRET` is sensitive and present in Vercel Preview and
+  Production. Vercel does not permit sensitive Development variables, so local
+  testing still requires adding it manually to ignored `.env.local`.
+- The stable branch preview now points to deployment
+  `worldbuilding-flashcards-mmf4ombd0.vercel.app`, which built successfully,
+  applied all migrations, and seeded 26 curated cards.
 
 ### OpenAI Platform
 
@@ -98,19 +96,17 @@ Already configured in all three Vercel environments:
 
 ## Immediate continuation steps
 
-1. Complete the Google Cloud and OpenAI Platform setup above, then add the three
-   missing secrets to Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
-   `OPENAI_API_KEY`.
-2. Redeploy `codex/lore-lens` so the ready preview receives those values.
-3. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
+1. Complete the OpenAI Platform setup above and add the remaining
+   `OPENAI_API_KEY` to Vercel Preview and Production.
+2. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
    the owner's Google account.
-4. Generate a real batch without approving it and verify ten questions, costs,
+3. Generate a real batch without approving it and verify ten questions, costs,
    sources, and rationales.
-5. Approve a subset and verify 50/50 deck behavior, persistence, history, and
+4. Approve a subset and verify 50/50 deck behavior, persistence, history, and
    source links. Test source-change archival using a disposable note.
-6. Inspect Vercel runtime logs and production database counts. The preview build
+5. Inspect Vercel runtime logs and production database counts. The preview build
    has already applied the migration and reseeded all 26 curated cards.
-7. Merge only after preview verification, then verify production, mark milestone
+6. Merge only after preview verification, then verify production, mark milestone
    2 complete in the PRD, and rewrite this file.
 
 ## Remaining PRD work
