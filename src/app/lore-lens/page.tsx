@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { BatchReviewForm } from "@/components/BatchReviewForm";
+import { GenerateLoreButton } from "@/components/GenerateLoreButton";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -161,9 +162,7 @@ export default async function LoreLensPage({
                 <option value="characters">Characters</option>
               </select>
             </label>
-            <Button type="submit" disabled={!googleConnection}>
-              Generate 10 questions
-            </Button>
+            <GenerateLoreButton disabled={!googleConnection} />
           </form>
         </CardContent>
       </Card>

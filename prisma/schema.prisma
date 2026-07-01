@@ -76,6 +76,12 @@ model LoreBatch {
   @@index([createdAt])
 }
 
+model LoreGenerationLock {
+  id        String   @id
+  token     String
+  expiresAt DateTime
+}
+
 model LoreQuestion {
   id               String         @id @default(cuid())
   batchId          String
