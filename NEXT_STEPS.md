@@ -10,11 +10,11 @@ Milestone 1 remains complete and live at
 `https://worldbuilding-flashcards.vercel.app`.
 
 Milestone 2, **Lore Lens**, is implemented on `codex/lore-lens` but is not yet
-production-ready because the OpenAI project key still requires owner-managed
-account setup. Do not merge the branch or mark milestone 2 complete until the
-preview is connected to Drive and OpenAI and the real-vault flow passes.
+production-ready because the real-vault preview flow has not yet been exercised.
+Do not merge the branch or mark milestone 2 complete until the preview is
+connected to Drive and the generation, approval, and stale-source flow passes.
 
-The branch is pushed at commit `5429887`. A ready Vercel preview exists at
+The branch is pushed to GitHub. A ready Vercel preview exists at
 `https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app`.
 Vercel Deployment Protection currently requires the owner's Vercel login before
 that preview can be opened in a browser.
@@ -74,17 +74,16 @@ Implemented:
   Production. Vercel does not permit sensitive Development variables, so local
   testing still requires adding it manually to ignored `.env.local`.
 - The stable branch preview now points to deployment
-  `worldbuilding-flashcards-mmf4ombd0.vercel.app`, which built successfully,
+  `worldbuilding-flashcards-8rkmrdy12.vercel.app`, which built successfully,
   applied all migrations, and seeded 26 curated cards.
 
-### OpenAI Platform
+### OpenAI Platform — configured for deployed environments
 
-1. Create a dedicated API project for Lore Lens with billing enabled.
-2. Restrict model use to GPT-5.4 mini where project controls allow.
-3. Add soft budget alerts below and at $2/month. The app enforces the hard cap.
-4. Add a project-scoped `OPENAI_API_KEY` directly to Vercel's Production,
-   Preview, and Development environments. A ChatGPT subscription does not
-   supply this key or API billing.
+- The dedicated Lore Lens API project uses GPT-5.4 mini with application-level
+  hard enforcement of the $2 monthly ceiling.
+- `OPENAI_API_KEY` is sensitive and present in Vercel Preview and Production.
+  Local generation remains unavailable until the owner optionally adds the key
+  to ignored `.env.local`; this does not block preview verification.
 
 Already configured in all three Vercel environments:
 
@@ -96,17 +95,15 @@ Already configured in all three Vercel environments:
 
 ## Immediate continuation steps
 
-1. Complete the OpenAI Platform setup above and add the remaining
-   `OPENAI_API_KEY` to Vercel Preview and Production.
-2. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
+1. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
    the owner's Google account.
-3. Generate a real batch without approving it and verify ten questions, costs,
+2. Generate a real batch without approving it and verify ten questions, costs,
    sources, and rationales.
-4. Approve a subset and verify 50/50 deck behavior, persistence, history, and
+3. Approve a subset and verify 50/50 deck behavior, persistence, history, and
    source links. Test source-change archival using a disposable note.
-5. Inspect Vercel runtime logs and production database counts. The preview build
+4. Inspect Vercel runtime logs and production database counts. The preview build
    has already applied the migration and reseeded all 26 curated cards.
-6. Merge only after preview verification, then verify production, mark milestone
+5. Merge only after preview verification, then verify production, mark milestone
    2 complete in the PRD, and rewrite this file.
 
 ## Remaining PRD work
