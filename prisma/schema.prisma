@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Card {
+  id        String   @id @default(cuid())
+  category  String
+  prompt    String
+  source    String   @default("curated")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  answers   Answer[]
+}
+
+model Answer {
+  id        String   @id @default(cuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([cardId])
+}
