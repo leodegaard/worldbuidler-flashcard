@@ -19,9 +19,10 @@ export default async function Home({
           No prompt cards yet. Seed the database to get started.
         </p>
       )}
-      <Link href="/history" className="text-sm underline text-muted-foreground">
-        View saved answers
-      </Link>
+      <nav className="flex gap-4 text-sm text-muted-foreground">
+        <Link href="/history" className="underline">View saved answers</Link>
+        <Link href="/lore-lens" className="underline">Lore Lens</Link>
+      </nav>
     </main>
   );
 }
