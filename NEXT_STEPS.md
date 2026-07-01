@@ -6,64 +6,55 @@ Codex, or a human. Requirements live in
 
 ## Current status
 
-Milestone 1 (curated cards and answer capture) is deployed and all automated
-production checks pass. It remains marked `in-progress` in the PRD only because
-the required check on physical phone hardware has not yet been performed.
+Milestone 1 (curated cards and answer capture) is **complete**: built, deployed,
+and verified on desktop and a physical phone.
 
 - Production: `https://worldbuilding-flashcards.vercel.app`
 - Vercel project: `larserikodegaard-8796s-projects/worldbuilding-flashcards`
 - GitHub repository `leodegaard/worldbuidler-flashcard` is connected for
-  automatic deployments from `main`.
-- Neon Postgres resource `worldbuilding-flashcards-db` uses the free plan in
-  Frankfurt (`fra1`) and is connected to Production, Preview, and Development.
-- `DATABASE_URL` and related Neon variables are injected in all environments.
-  Fresh sensitive `APP_PASSWORD` and `SESSION_SECRET` values are configured for
-  Production and Preview and are not committed.
-- The production build applied migration `20260701104111_init`, idempotently
-  seeded 26 cards, and built successfully. `/history` is dynamic (`ƒ`).
-- Direct production SQL verification found exactly 26 active cards.
-- The synthetic production verification answer was deleted after testing, so
-  the production answer table is clean.
+  automatic production deployments from `main`.
+- Neon resource `worldbuilding-flashcards-db` uses the free plan in Frankfurt
+  (`fra1`) and is connected to Production, Preview, and Development.
+- The production build runs Prisma migrations, idempotently seeds the curated
+  deck, and then builds Next.js. `/history` is dynamic (`ƒ`).
+- Production SQL currently shows 26 active curated cards and 2 saved answers.
+- Fresh sensitive `APP_PASSWORD` and `SESSION_SECRET` values are configured in
+  Vercel and are not committed.
 - `.env*`, `.vercel`, `.next`, `node_modules`, generated Prisma code, and
   TypeScript build artifacts remain ignored and uncommitted.
 
-## Production verification completed
+## Verification completed
 
-- Unauthenticated navigation redirects to `/login`.
-- An incorrect password is rejected and the production password signs in.
-- Saving a non-empty answer advances to another card.
-- `/history` immediately shows the saved answer without a rebuild.
-- Reloading `/history` preserves the answer.
-- Skipping advances without creating another answer.
-- Desktop rendering works.
-- A live production run at a 390x844 browser viewport showed both card and
-  history pages without horizontal overflow; the saved answer remained visible.
-- No HTTP 500 responses appeared in Vercel runtime logs during verification.
-- The only log warning is emitted by `pg` because Neon's generated URL uses an
-  SSL mode whose semantics will change in the future `pg` v9 release. The
-  current connection is verified and working; revisit when upgrading `pg`.
+- Unauthenticated requests redirect to `/login`; incorrect passwords are
+  rejected and the production password signs in.
+- Saving advances to another card and immediately persists to `/history`.
+- Reloading and moving between desktop and phone preserve saved answers.
+- Skipping advances without creating an answer.
+- Desktop, 390x844 responsive viewport, and physical-phone use all work.
+- Production contains exactly 26 active cards; the owner created 2 real answers
+  from the phone and they were confirmed directly in Postgres.
+- Vercel showed no HTTP 500 responses during automated verification.
 
-## Immediate next step
+## Immediate next step: validate the product
 
-Open `https://worldbuilding-flashcards.vercel.app` on an actual phone, sign in,
-save an answer, and confirm it appears in `/history` on both the phone and a
-desktop browser. The production password was handed directly to the owner and
-must not be added to this repository.
+Use the app during real campaign-prep sessions for four consecutive weeks.
+Self-track at least:
 
-After that succeeds:
+- Date of each voluntary prep session.
+- Whether the prompt-card interaction helped focus or felt constraining.
+- Rough number of cards answered in the session (answer timestamps in Postgres
+  can help reconstruct this).
+- Any prompt categories that repeatedly feel useful, weak, or missing.
 
-1. Change milestone 1 from `in-progress` to `complete` in
-   `.claude/prds/dnd-worldbuilding-flashcards.prd.md`.
-2. Rewrite this file to record physical-phone verification and the clean final
-   milestone state.
-3. Use the app during real prep sessions and self-track usage for four weeks.
-   Do not plan milestone 2 until reviewing the target of at least three
-   voluntary sessions per week and whether the flashcard interaction is useful.
+At the end of four weeks, compare usage against the PRD target of at least three
+voluntary sessions per week. Decide whether to retain or revise the flashcard
+interaction before planning milestone 2.
 
 ## Remaining PRD work
 
 - Milestone 2: generate cards from the user's Obsidian notes and mix them into
-  the curated pool. The existing `Card.source` field anticipates this.
+  the curated pool. The existing `Card.source` field anticipates this. Do not
+  begin implementation until the milestone-1 usage review.
 - Milestone 3: export saved answers as canon candidates into the Obsidian vault,
   likely through Google Drive integration.
 
@@ -77,5 +68,7 @@ After that succeeds:
   `PrismaClient`.
 - Local development uses Homebrew Postgres because `prisma dev` produced a
   `P1017` protocol failure in this environment.
+- Neon's generated URL currently causes a non-blocking `pg` warning about SSL
+  mode semantics changing in `pg` v9; revisit when upgrading `pg`.
 - Test Server Actions with a real browser; plain `curl` does not reproduce the
   Next.js action invocation protocol.

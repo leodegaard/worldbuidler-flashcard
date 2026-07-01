@@ -38,7 +38,7 @@ We'll know we're right when **the user voluntarily returns to use the tool repea
 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Curated card deck + answer capture | User can draw one generic worldbuilding prompt at a time and save a written answer in-app | in-progress (built + verified locally, not yet deployed — see `NEXT_STEPS.md`) | `NEXT_STEPS.md` |
+| 1 | Curated card deck + answer capture | User can draw one generic worldbuilding prompt at a time and save a written answer in-app | complete (deployed and verified on desktop + physical phone) | `NEXT_STEPS.md` |
 | 2 | Notes-derived question generation | User can draw prompts generated from scanning their own Obsidian notes, mixed in with the curated deck | pending | — |
 | 3 | Obsidian canon-candidate export | Saved answers get written into a "might be included in canon" section of the user's Obsidian vault | pending | — |
 
