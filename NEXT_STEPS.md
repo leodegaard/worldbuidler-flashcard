@@ -37,6 +37,12 @@ Implemented:
   fingerprints, and non-canon draft-answer context.
 - $2 UTC-calendar-month application hard cap with worst-case preflight checks
   and actual usage/cost persistence.
+- Submission feedback changes the generate button to disabled `Generating…`
+  while its Server Action is pending. A 15-minute renewable Postgres lease
+  prevents simultaneous requests across separate Vercel instances and safely
+  recovers after a crashed invocation.
+- Source metadata is synchronized in bounded, idempotent chunks so a large vault
+  does not hold one transaction past Prisma's five-second timeout.
 - Multiple draft batches, select-all/clear/individual review, selective approval,
   rejection memory, discard, and a 30-active-unanswered-card ceiling.
 - Source-hash recheck on approval and automatic archival of stale generated
@@ -54,6 +60,8 @@ Implemented:
 - `npx tsc --noEmit`: passing.
 - `npm run build`: passing; `/`, `/history`, `/lore-lens`, and both OAuth
   handlers are dynamic routes.
+- The generation lease was integration-tested against local Postgres: a current
+  lease rejects a second run, and an expired lease is reclaimed and released.
 - Browser verification against local Postgres covered password protection,
   navigation, disconnected state, focus selection, budget/active counters,
   responsive 390x844 layout without overflow, multiple-draft rendering,
@@ -74,8 +82,8 @@ Implemented:
   Production. Vercel does not permit sensitive Development variables, so local
   testing still requires adding it manually to ignored `.env.local`.
 - The stable branch preview now points to deployment
-  `worldbuilding-flashcards-8rkmrdy12.vercel.app`, which built successfully,
-  applied all migrations, and seeded 26 curated cards.
+  `worldbuilding-flashcards-dh4swx1hn.vercel.app`, which built successfully,
+  applied all three migrations, and seeded 26 curated cards.
 
 ### OpenAI Platform — configured for deployed environments
 
@@ -95,10 +103,10 @@ Already configured in all three Vercel environments:
 
 ## Immediate continuation steps
 
-1. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
-   the owner's Google account.
-2. Generate a real batch without approving it and verify ten questions, costs,
-   sources, and rationales.
+1. Reload the connected `/lore-lens` preview and generate exactly one Balanced
+   batch. Verify that the button immediately reads `Generating…` and is disabled.
+2. Inspect the resulting ten questions, cost, sources, rationales, and scan
+   warnings without approving anything yet.
 3. Approve a subset and verify 50/50 deck behavior, persistence, history, and
    source links. Test source-change archival using a disposable note.
 4. Inspect Vercel runtime logs and production database counts. The preview build
@@ -121,3 +129,8 @@ Already configured in all three Vercel environments:
   changing conventions.
 - Prisma 7 requires the existing `@prisma/adapter-pg` adapter.
 - Test Server Actions with a browser, not plain `curl`.
+- The first real-vault generation reached metadata synchronization but failed
+  before calling OpenAI because one transaction exceeded Prisma's 5000 ms limit
+  (5258 ms elapsed). Commit `6587bf1` replaces that transaction with chunked
+  idempotent writes and adds the UI/server duplicate-request safeguards. The
+  fixed deployed run is the immediate verification target.
