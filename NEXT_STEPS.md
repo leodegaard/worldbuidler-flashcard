@@ -15,6 +15,11 @@ owner-managed account setup. Do not merge the branch or mark milestone 2
 complete until the preview is connected to both services and the real-vault flow
 passes.
 
+The branch is pushed at commit `5429887`. A ready Vercel preview exists at
+`https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app`.
+Vercel Deployment Protection currently requires the owner's Vercel login before
+that preview can be opened in a browser.
+
 Implemented:
 
 - Google OAuth connect/callback flow using read-only Drive consent, offline
@@ -69,32 +74,43 @@ Implemented:
 4. Add authorized redirect URIs:
    - `http://localhost:3000/api/google/callback`
    - `https://worldbuilding-flashcards.vercel.app/api/google/callback`
-   - The Vercel branch-preview alias callback once the preview URL is known.
-5. Provide `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Never commit them.
+   - `https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app/api/google/callback`
+5. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` directly to Vercel's
+   Production, Preview, and Development environments. Never commit them or send
+   them through a public channel.
 
 ### OpenAI Platform
 
 1. Create a dedicated API project for Lore Lens with billing enabled.
 2. Restrict model use to GPT-5.4 mini where project controls allow.
 3. Add soft budget alerts below and at $2/month. The app enforces the hard cap.
-4. Provide a project-scoped `OPENAI_API_KEY`. A ChatGPT subscription does not
+4. Add a project-scoped `OPENAI_API_KEY` directly to Vercel's Production,
+   Preview, and Development environments. A ChatGPT subscription does not
    supply this key or API billing.
+
+Already configured in all three Vercel environments:
+
+- `OAUTH_ENCRYPTION_KEY`
+- `LORE_CAMPAIGN_FOLDER_ID`
+- `LORE_WORLD_FOLDER_ID`
+- `LORE_CHARACTERS_FOLDER_ID`
+- Environment-specific `GOOGLE_REDIRECT_URI` values
 
 ## Immediate continuation steps
 
-1. Add the two Google values and OpenAI key to local `.env` and Vercel Preview
-   and Production as sensitive variables.
-2. Add a generated 32-byte `OAUTH_ENCRYPTION_KEY` to the same environments.
-3. Add the three discovered Drive folder IDs (documented in `.env.example`) to
-   Vercel environments.
-4. Deploy `codex/lore-lens` as a Vercel preview; the build will apply the Prisma
-   migration to the connected preview database and seed curated cards.
-5. Connect Drive from `/lore-lens`, generate a real batch without approving it,
-   and verify ten questions, costs, sources, and rationales.
-6. Approve a subset and verify 50/50 deck behavior, persistence, history, and
+1. Complete the Google Cloud and OpenAI Platform setup above, then add the three
+   missing secrets to Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
+   `OPENAI_API_KEY`.
+2. Redeploy `codex/lore-lens` so the ready preview receives those values.
+3. Sign in through Vercel Deployment Protection, open `/lore-lens`, and connect
+   the owner's Google account.
+4. Generate a real batch without approving it and verify ten questions, costs,
+   sources, and rationales.
+5. Approve a subset and verify 50/50 deck behavior, persistence, history, and
    source links. Test source-change archival using a disposable note.
-7. Inspect Vercel build/runtime logs and production database counts.
-8. Merge only after preview verification, then verify production, mark milestone
+6. Inspect Vercel runtime logs and production database counts. The preview build
+   has already applied the migration and reseeded all 26 curated cards.
+7. Merge only after preview verification, then verify production, mark milestone
    2 complete in the PRD, and rewrite this file.
 
 ## Remaining PRD work
