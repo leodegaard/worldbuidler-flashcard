@@ -5,6 +5,7 @@ A solo DM building a homebrew world experiences scattered focus during prep: the
 
 ## Evidence
 - Assumption — needs validation via prototype. No prior research or workaround attempts; this is a personal itch surfaced while starting a new campaign, with no external data yet.
+- Product decision (2026-07-01) — the owner explicitly waived the planned four-week validation period and chose to proceed on the assumption that the milestone-1 interaction works. This accepts, rather than resolves, the retention and interaction-fit risks below.
 
 ## Users
 - **Primary**: Solo DM in the worldbuilding/prep phase (not during live sessions) who already maintains lore notes in Obsidian and wants focused prompts to develop that world further.
@@ -39,7 +40,7 @@ We'll know we're right when **the user voluntarily returns to use the tool repea
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
 | 1 | Curated card deck + answer capture | User can draw one generic worldbuilding prompt at a time and save a written answer in-app | complete (deployed and verified on desktop + physical phone) | `NEXT_STEPS.md` |
-| 2 | Notes-derived question generation | User can draw prompts generated from scanning their own Obsidian notes, mixed in with the curated deck | pending | — |
+| 2 | Notes-derived question generation | User can draw prompts generated from scanning their own Obsidian notes, mixed in with the curated deck | in-progress (vault discovery complete; implementation planning next) | `NEXT_STEPS.md` |
 | 3 | Obsidian canon-candidate export | Saved answers get written into a "might be included in canon" section of the user's Obsidian vault | pending | — |
 
 ## Open Questions
