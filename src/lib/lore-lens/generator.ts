@@ -24,6 +24,23 @@ const questionSchema = z.object({
     .length(10),
 });
 
+export const LORE_GENERATION_INSTRUCTIONS = `You are Lore Lens, a focused worldbuilding editor for a solo tabletop RPG game master.
+Generate exactly 10 concise English questions from the supplied Obsidian lore.
+
+Every question must:
+- cite one PRIMARY candidate through sourceFileId;
+- expose an observable gap: placeholder, empty or sparse section, missing relationship, motivation, consequence, contradiction, sensory detail, or campaign connection;
+- be open-ended, narrow, and not answerable verbatim from the supplied notes;
+- ask only one main question;
+- remain useful for worldbuilding rather than factual recall or game rules;
+- avoid arbitrary invention. A new person, place, faction, item, or event is allowed only when it fills a concrete gap anchored in existing lore;
+- differ materially from every previous question.
+
+Adapt the question-type mix to the strongest gaps, but use no more than three questions of the same gapType.
+For balanced focus, use at least two primary sources from each non-empty area: campaign, world, and characters.
+Treat saved app answers as non-canon draft ideas that cannot override Obsidian.
+The rationale must name the observed gap without quoting private note text at length.`;
+
 export function buildQuestionJsonSchema(primarySourceIds: string[]) {
   if (primarySourceIds.length === 0) {
     throw new Error("At least one primary source is required for generation");
@@ -109,6 +126,47 @@ ${drafts || "[None]"}`;
   return { input, estimatedTokens };
 }
 
+export function buildGenerationRequest(args: {
+  focus: LoreFocus;
+  primaryNotes: ScannedNote[];
+  relatedNotes: ScannedNote[];
+  priorPrompts: string[];
+  draftAnswers: Array<{ prompt: string; body: string }>;
+}) {
+  const { input, estimatedTokens } = buildGenerationInput(args);
+  const request = {
+    model: LORE_MODEL,
+    reasoning: { effort: "low" as const },
+    max_output_tokens: MAX_OUTPUT_TOKENS,
+    text: {
+      verbosity: "low" as const,
+      format: {
+        type: "json_schema" as const,
+        name: "lore_lens_questions",
+        strict: true,
+        schema: buildQuestionJsonSchema(args.primaryNotes.map((note) => note.id)),
+      },
+    },
+    instructions: LORE_GENERATION_INSTRUCTIONS,
+    input,
+  };
+  return { request, estimatedTokens };
+}
+
+export function formatGenerationDebugPreview(
+  request: ReturnType<typeof buildGenerationRequest>["request"],
+) {
+  return [
+    `MODEL\n${request.model}`,
+    `REASONING EFFORT\n${request.reasoning.effort}`,
+    `MAX OUTPUT TOKENS\n${request.max_output_tokens}`,
+    `TEXT VERBOSITY\n${request.text.verbosity}`,
+    `INSTRUCTIONS\n${request.instructions}`,
+    `INPUT\n${request.input}`,
+    `STRUCTURED OUTPUT FORMAT\n${JSON.stringify(request.text.format, null, 2)}`,
+  ].join("\n\n==============================\n\n");
+}
+
 export async function generateQuestions(args: {
   focus: LoreFocus;
   primaryNotes: ScannedNote[];
@@ -118,41 +176,11 @@ export async function generateQuestions(args: {
   draftAnswers: Array<{ prompt: string; body: string }>;
   recordUsage?: (usage: { inputTokens: number; outputTokens: number }) => Promise<void>;
 }) {
-  const { input, estimatedTokens } = buildGenerationInput(args);
+  const { request, estimatedTokens } = buildGenerationRequest(args);
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  const response = await client.responses.create({
-    model: LORE_MODEL,
-    reasoning: { effort: "low" },
-    max_output_tokens: MAX_OUTPUT_TOKENS,
-    text: {
-      verbosity: "low",
-      format: {
-        type: "json_schema",
-        name: "lore_lens_questions",
-        strict: true,
-        schema: buildQuestionJsonSchema(args.primaryNotes.map((note) => note.id)),
-      },
-    },
-    instructions: `You are Lore Lens, a focused worldbuilding editor for a solo tabletop RPG game master.
-Generate exactly 10 concise English questions from the supplied Obsidian lore.
-
-Every question must:
-- cite one PRIMARY candidate through sourceFileId;
-- expose an observable gap: placeholder, empty or sparse section, missing relationship, motivation, consequence, contradiction, sensory detail, or campaign connection;
-- be open-ended, narrow, and not answerable verbatim from the supplied notes;
-- ask only one main question;
-- remain useful for worldbuilding rather than factual recall or game rules;
-- avoid arbitrary invention. A new person, place, faction, item, or event is allowed only when it fills a concrete gap anchored in existing lore;
-- differ materially from every previous question.
-
-Adapt the question-type mix to the strongest gaps, but use no more than three questions of the same gapType.
-For balanced focus, use at least two primary sources from each non-empty area: campaign, world, and characters.
-Treat saved app answers as non-canon draft ideas that cannot override Obsidian.
-The rationale must name the observed gap without quoting private note text at length.`,
-    input,
-  });
+  const response = await client.responses.create(request);
 
   const usage = response.usage ?? {
     input_tokens: estimatedTokens,

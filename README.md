@@ -36,6 +36,11 @@ External setup:
 5. Open `/lore-lens`, connect Google Drive with read-only consent, and generate
    a draft batch.
 
+Use **Preview API payload** beside the generate button to inspect the exact
+model settings, instructions, selected note context, prior questions, draft
+answers, and structured-output schema without calling OpenAI or recording model
+usage.
+
 ## Verification
 
 ```bash

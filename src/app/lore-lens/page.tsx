@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { BatchReviewForm } from "@/components/BatchReviewForm";
-import { GenerateLoreButton } from "@/components/GenerateLoreButton";
+import { LoreGenerationForm } from "@/components/LoreGenerationForm";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,6 @@ import { getMonthlyUsageMicros } from "@/lib/lore-lens/service";
 import {
   discardLoreBatchAction,
   disconnectGoogleAction,
-  generateLoreBatchAction,
 } from "./actions";
 
 function dollars(micros: number) {
@@ -148,22 +147,7 @@ export default async function LoreLensPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={generateLoreBatchAction} className="flex flex-wrap items-end gap-3">
-            <label className="grid gap-1 text-sm">
-              Focus
-              <select
-                name="focus"
-                defaultValue="balanced"
-                className="h-9 rounded-lg border bg-background px-3"
-              >
-                <option value="balanced">Balanced</option>
-                <option value="campaign">Campaign</option>
-                <option value="world">World</option>
-                <option value="characters">Characters</option>
-              </select>
-            </label>
-            <GenerateLoreButton disabled={!googleConnection} />
-          </form>
+          <LoreGenerationForm disabled={!googleConnection} />
         </CardContent>
       </Card>
 

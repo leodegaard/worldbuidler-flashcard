@@ -1,24 +1,24 @@
 # D&D Worldbuilding Helper Flashcards
 
 ## Problem
-A solo DM building a homebrew world experiences scattered focus during prep: their mind jumps between subjects (NPCs, locations, factions, history) without settling long enough to develop any one of them. There's no tool that narrows focus to one small, concrete question at a time and captures the resulting answer as draft lore.
+A solo worldbuilder developing a homebrew D&D setting experiences scattered focus: their mind jumps between NPCs, cities, cultures, factions, history, and story threads without settling long enough to add depth to any one of them. Existing notes capture what has already been decided, but do not reliably surface the small, concrete questions that make the people, places, world, and stories feel interconnected and lived in. The app narrows attention to one such question at a time and captures the resulting answer as draft lore.
 
 ## Evidence
 - Assumption — needs validation via prototype. No prior research or workaround attempts; this is a personal itch surfaced while starting a new campaign, with no external data yet.
 - Product decision (2026-07-01) — the owner explicitly waived the planned four-week validation period and chose to proceed on the assumption that the milestone-1 interaction works. This accepts, rather than resolves, the retention and interaction-fit risks below.
 
 ## Users
-- **Primary**: Solo DM in the worldbuilding/prep phase (not during live sessions) who already maintains lore notes in Obsidian and wants focused prompts to develop that world further.
+- **Primary**: Solo DM or worldbuilder developing a homebrew D&D setting (not during live sessions) who already maintains lore notes in Obsidian and wants focused prompts that add depth to its NPCs, places, cultures, relationships, history, and stories.
 - **Not for**: Players, DMs running published/existing settings for recall purposes, multi-user or shared-deck use cases.
 
 ## Hypothesis
-We believe **small, focused prompt cards — mixing curated generic worldbuilding questions with questions generated from the user's own Obsidian notes** will **reduce scattered, unfocused prep and turn it into concrete incremental lore** for **a solo DM building a homebrew world**.
-We'll know we're right when **the user voluntarily returns to use the tool repeatedly over multiple prep sessions**, rather than abandoning it after first use.
+We believe **small, focused prompt cards — mixing curated generic worldbuilding questions with questions generated from the user's own Obsidian notes** will **reduce scattered worldbuilding and turn it into concrete, interconnected lore with greater depth** for **a solo DM building a homebrew world**.
+We'll know we're right when **the user voluntarily returns to use the tool repeatedly over multiple worldbuilding sessions**, rather than abandoning it after first use.
 
 ## Success Metrics
 | Metric | Target | How measured |
 |---|---|---|
-| Voluntary return usage | Used in ≥3 separate prep sessions/week for 4 consecutive weeks | Self-tracked usage while prepping current campaign |
+| Voluntary return usage | Used in ≥3 separate worldbuilding sessions/week for 4 consecutive weeks | Self-tracked usage while developing the current setting |
 | Cards answered per session | TBD — needs validation via prototype | Count of completed answers per session once app exists |
 
 ## Scope
@@ -31,7 +31,7 @@ We'll know we're right when **the user voluntarily returns to use the tool repea
 **Out of scope**
 - Multi-user, deck sharing, or publishing to other DMs/players — single-user personal tool only.
 - Writing answers directly into an Obsidian "might be included in canon" section — deferred; MVP saves answers in-app for later manual export.
-- Spaced-repetition/recall quizzing on already-established facts — this tool is for generative prep, not memorization.
+- Spaced-repetition/recall quizzing on already-established facts — this tool is for generative worldbuilding, not memorization.
 
 ## Delivery Milestones
 <!-- Business outcomes, not engineering tasks. /plan turns each into a plan. -->

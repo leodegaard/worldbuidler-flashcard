@@ -1,6 +1,6 @@
 # Next Steps
 
-Status as of 2026-07-01. This is the cold-start handoff for Claude Code,
+Status as of 2026-07-02. This is the cold-start handoff for Claude Code,
 Codex, or a human. Requirements live in
 `.claude/prds/dnd-worldbuilding-flashcards.prd.md`.
 
@@ -13,6 +13,37 @@ Milestone 2, **Lore Lens**, is implemented on `codex/lore-lens` but is not yet
 production-ready because the real-vault preview flow has not yet been exercised.
 Do not merge the branch or mark milestone 2 complete until the preview is
 connected to Drive and the generation, approval, and stale-source flow passes.
+
+A product-alignment review on 2026-07-02 clarified the intended outcome: this
+is a focused worldbuilding tool, not a recall deck, an upcoming-session prep
+assistant, or merely an incomplete-note detector. Its job is to reduce scattered
+worldbuilding by presenting one small, world-specific question at a time that
+adds depth to NPCs, cities, cultures, relationships, history, the wider world, or
+story threads, then captures the answer as draft lore. Lore Lens should therefore
+select questions by their potential to deepen and connect the setting, as well as
+their answerability; note sparsity is only one signal. The current generation
+pipeline is mechanically aligned with that goal but has not yet demonstrated
+that its questions meet that quality bar on the real vault.
+
+The current API context contains up to 15 gap-ranked primary note bodies, 10
+two-hop related note bodies, 200 prior generated prompts, and the 10 most recent
+saved answers. Canonical Obsidian text and non-canon answers are labeled
+separately. Known product-context weaknesses to evaluate before treating Lore
+Lens as complete:
+
+- Primary selection overweights short, empty, or placeholder-heavy notes without
+  estimating whether resolving the gap would meaningfully deepen the setting.
+- Related notes are supplied as an unlabeled group; the model is not told which
+  links/backlinks connect each related note to each primary note.
+- Recent answers are global rather than relevant to the selected notes, entities,
+  or prior question, which can add noise and makes coherent follow-ups accidental.
+- The request has only a broad Campaign/World/Characters/Balanced focus. It lacks
+  optional creative direction such as which part of the setting the user wants
+  to deepen, which unresolved thread interests them, or the desired answering
+  depth. This direction must not be framed around upcoming-session utility.
+- A generated question cites one primary source, but all selected note IDs are
+  stored as its context provenance. Per-question evidence and supporting sources
+  are therefore not represented precisely.
 
 The branch is pushed to GitHub. A ready Vercel preview exists at
 `https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app`.
@@ -35,6 +66,16 @@ Implemented:
 - Pinned GPT-5.4 mini structured generation of exactly 10 English questions,
   extended categories, evidence rationales, source validation, duplicate
   fingerprints, and non-canon draft-answer context.
+- A `Preview API payload` debug action runs the real Drive scan and context
+  selection, then renders the complete model, instructions, input text, limits,
+  and structured-output schema on `/lore-lens` without calling OpenAI, charging
+  the budget, recording usage, or synchronizing source metadata.
+- Runtime database URLs normalize the legacy strict `sslmode=require`,
+  `prefer`, or `verify-ca` aliases to explicit `sslmode=verify-full`, preserving
+  current certificate and hostname verification while avoiding the pg v9
+  migration warning. The debug submit button also leaves React's Server Action
+  routing attributes under React's control, avoiding console and hydration
+  warnings.
 - $2 UTC-calendar-month application hard cap with worst-case preflight checks
   and actual usage/cost persistence.
 - Submission feedback changes the generate button to disabled `Generating…`
@@ -55,7 +96,9 @@ Implemented:
 
 ## Verification completed
 
-- `npm test`: 9/9 passing.
+- `npm test`: 13/13 passing, including coverage that the debug preview contains
+  all parts of the request used by the real OpenAI call and that database SSL
+  normalization preserves strict verification.
 - `npm run lint`: passing.
 - `npx tsc --noEmit`: passing.
 - `npm run build`: passing; `/`, `/history`, `/lore-lens`, and both OAuth
@@ -67,6 +110,11 @@ Implemented:
   responsive 390x844 layout without overflow, multiple-draft rendering,
   select-all/clear, discard, generated-card provenance, history provenance, and
   stale-source labeling. All fixture data was removed afterward.
+- Browser verification on 2026-07-02 ran `Preview API payload` against the
+  connected real vault. The full request appeared on-page after the Drive scan,
+  the UI returned from `Building preview…` to its idle state, and monthly usage
+  remained unchanged at $0.098. The scan took 83 seconds locally; this is Drive
+  traversal time, not model time.
 - `npm audit` reports five moderate advisories inherited through the current
   Next.js/Prisma dependency trees. Suggested automated fixes incorrectly
   downgrade major framework versions, so no force-fix was applied.
@@ -103,15 +151,31 @@ Already configured in all three Vercel environments:
 
 ## Immediate continuation steps
 
-1. Reload the connected `/lore-lens` preview and generate exactly one Balanced
-   batch. Verify that the button immediately reads `Generating…` and is disabled.
-2. Inspect the resulting ten questions, cost, sources, rationales, and scan
-   warnings without approving anything yet.
-3. Approve a subset and verify 50/50 deck behavior, persistence, history, and
-   source links. Test source-change archival using a disposable note.
-4. Inspect Vercel runtime logs and production database counts. The preview build
+1. Use `Preview API payload` on the deployed preview to review exactly what a
+   Balanced request would send. The first local real-vault preview confirmed
+   that image-only and very sparse notes can rank as primary candidates; decide
+   whether those should be excluded or enriched before spending another run.
+2. After accepting or correcting the context selection, generate exactly one
+   Balanced batch. Verify that the button immediately reads `Generating…` and is
+   disabled.
+3. Evaluate all ten questions before approval against the product bar: each must
+   be grounded in existing lore, answerable in one focused sitting, capable of
+   adding depth or meaningful connections, non-recall, and narrow enough to ask
+   one main question.
+   Record whether weak questions came from source selection, missing relational
+   context, or the generation instructions.
+4. Based on that real batch, decide whether milestone 2 needs a context redesign.
+   The leading design is an entity-centered bundle per primary note: relevant
+   excerpts, explicit outbound/backlink relationships, detected gap locations,
+   relevant prior answers, and optional user-entered creative direction. Avoid
+   sending unrelated recent answers or whole notes when a bounded excerpt is
+   sufficient.
+5. Once question quality passes, approve a subset and verify 50/50 deck behavior,
+   persistence, history, and source links. Test source-change archival using a
+   disposable note.
+6. Inspect Vercel runtime logs and production database counts. The preview build
    has already applied the migration and reseeded all 26 curated cards.
-5. Merge only after preview verification, then verify production, mark milestone
+7. Merge only after preview verification, then verify production, mark milestone
    2 complete in the PRD, and rewrite this file.
 
 ## Remaining PRD work
@@ -122,6 +186,12 @@ Already configured in all three Vercel environments:
 
 ## Existing gotchas
 
+- Localhost links work only while `npm run dev` is running in an active terminal;
+  if the page appears inert or unavailable, restart the development server and
+  reload `/lore-lens`.
+- Local development currently overrides `APP_PASSWORD` in ignored
+  `.env.development.local`; change that file rather than a tracked environment
+  example when rotating the local login.
 - `.env.local` may contain Vercel/Neon development credentials and overrides
   `.env` in Next.js. Prefix local dev commands with variables sourced from
   `.env` when testing against Homebrew Postgres.

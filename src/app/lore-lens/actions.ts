@@ -7,6 +7,7 @@ import {
   approveLoreQuestions,
   discardLoreBatch,
   generateLoreBatch,
+  previewLoreGenerationRequest,
 } from "@/lib/lore-lens/service";
 
 function destination(key: "success" | "error", message: string) {
@@ -28,6 +29,29 @@ export async function generateLoreBatchAction(formData: FormData) {
     target = destination("error", error instanceof Error ? error.message : "Generation failed");
   }
   redirect(target);
+}
+
+export async function previewLoreGenerationAction(
+  _previousState: { preview: string | null; error: string | null },
+  formData: FormData,
+): Promise<{ preview: string | null; error: string | null }> {
+  const rawFocus = formData.get("focus");
+  const focus =
+    typeof rawFocus === "string" &&
+    ["campaign", "world", "characters", "balanced"].includes(rawFocus)
+      ? (rawFocus as LoreFocus)
+      : "balanced";
+  try {
+    return {
+      preview: await previewLoreGenerationRequest(focus),
+      error: null,
+    };
+  } catch (error) {
+    return {
+      preview: null,
+      error: error instanceof Error ? error.message : "Debug preview failed",
+    };
+  }
 }
 
 export async function approveLoreBatchAction(formData: FormData) {

@@ -9,7 +9,12 @@ import {
   type LoreFocus,
 } from "./config";
 import { fetchCurrentNoteHash, scanLoreNotes } from "./drive";
-import { calculateCostMicros, generateQuestions } from "./generator";
+import {
+  buildGenerationRequest,
+  calculateCostMicros,
+  formatGenerationDebugPreview,
+  generateQuestions,
+} from "./generator";
 import {
   questionFingerprint,
   selectPrimaryNotes,
@@ -139,6 +144,46 @@ async function releaseGenerationLock(token: string) {
   }
 }
 
+async function prepareGenerationContext(focus: LoreFocus, synchronizeMetadata: boolean) {
+  const scan = await scanLoreNotes();
+  if (synchronizeMetadata) await syncSourceMetadata(scan.notes);
+  const primaryNotes = selectPrimaryNotes(scan.notes, focus);
+  if (primaryNotes.length === 0 || primaryNotes.every((note) => note.gapScore === 0)) {
+    throw new Error("No eligible lore gaps were found for this focus");
+  }
+  const relatedNotes = selectRelatedNotes(scan.notes, primaryNotes);
+  const [previous, draftAnswers] = await Promise.all([
+    db.loreQuestion.findMany({ select: { prompt: true, fingerprint: true } }),
+    db.answer.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { body: true, card: { select: { prompt: true } } },
+    }),
+  ]);
+  return {
+    scan,
+    primaryNotes,
+    relatedNotes,
+    previous,
+    draftAnswers: draftAnswers.map((answer) => ({
+      prompt: answer.card.prompt,
+      body: answer.body,
+    })),
+  };
+}
+
+export async function previewLoreGenerationRequest(focus: LoreFocus) {
+  const context = await prepareGenerationContext(focus, false);
+  const { request } = buildGenerationRequest({
+    focus,
+    primaryNotes: context.primaryNotes,
+    relatedNotes: context.relatedNotes,
+    priorPrompts: context.previous.map((question) => question.prompt),
+    draftAnswers: context.draftAnswers,
+  });
+  return formatGenerationDebugPreview(request);
+}
+
 export async function generateLoreBatch(focus: LoreFocus) {
   const lockToken = await acquireGenerationLock();
   try {
@@ -147,26 +192,15 @@ export async function generateLoreBatch(focus: LoreFocus) {
       throw new Error("The $2 monthly Lore Lens budget has been reached");
     }
 
-    const scan = await scanLoreNotes();
-    await syncSourceMetadata(scan.notes);
-    const primaryNotes = selectPrimaryNotes(scan.notes, focus);
-    if (primaryNotes.length === 0 || primaryNotes.every((note) => note.gapScore === 0)) {
-      throw new Error("No eligible lore gaps were found for this focus");
-    }
-    const relatedNotes = selectRelatedNotes(scan.notes, primaryNotes);
-    const previous = await db.loreQuestion.findMany({ select: { prompt: true, fingerprint: true } });
-    const draftAnswers = await db.answer.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { body: true, card: { select: { prompt: true } } },
-    });
+    const { scan, primaryNotes, relatedNotes, previous, draftAnswers } =
+      await prepareGenerationContext(focus, true);
     const generated = await generateQuestions({
       focus,
       primaryNotes,
       relatedNotes,
       priorPrompts: previous.map((question) => question.prompt),
       priorFingerprints: new Set(previous.map((question) => question.fingerprint)),
-      draftAnswers: draftAnswers.map((answer) => ({ prompt: answer.card.prompt, body: answer.body })),
+      draftAnswers,
       recordUsage: async ({ inputTokens, outputTokens }) => {
         await db.loreModelUsage.create({
           data: {
