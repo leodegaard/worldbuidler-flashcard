@@ -7,7 +7,11 @@ export default async function HistoryPage() {
   await connection();
 
   const answers = await db.answer.findMany({
-    include: { card: true },
+    include: {
+      card: {
+        include: { loreQuestion: { include: { sourceNote: true } } },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -15,9 +19,10 @@ export default async function HistoryPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Saved answers</h1>
-        <Link href="/" className="text-sm underline text-muted-foreground">
-          Back to cards
-        </Link>
+        <nav className="flex gap-3 text-sm text-muted-foreground">
+          <Link href="/lore-lens" className="underline">Lore Lens</Link>
+          <Link href="/" className="underline">Back to cards</Link>
+        </nav>
       </div>
 
       {answers.length === 0 ? (
@@ -36,6 +41,23 @@ export default async function HistoryPage() {
               </div>
               <p className="mb-2 font-medium">{answer.card.prompt}</p>
               <p className="whitespace-pre-wrap text-sm">{answer.body}</p>
+              {answer.card.loreQuestion && (
+                <div className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge>Lore Lens</Badge>
+                    {!answer.card.active && <Badge variant="outline">Stale source</Badge>}
+                    <a
+                      href={`https://drive.google.com/open?id=${answer.card.loreQuestion.sourceNoteId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      {answer.card.loreQuestion.sourceNote.name}
+                    </a>
+                  </div>
+                  <p className="mt-1">{answer.card.loreQuestion.rationale}</p>
+                </div>
+              )}
             </li>
           ))}
         </ul>

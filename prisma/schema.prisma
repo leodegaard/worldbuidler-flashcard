@@ -13,13 +13,14 @@ datasource db {
 }
 
 model Card {
-  id        String   @id @default(cuid())
-  category  String
-  prompt    String
-  source    String   @default("curated")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  answers   Answer[]
+  id           String        @id @default(cuid())
+  category     String
+  prompt       String
+  source       String        @default("curated")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  answers      Answer[]
+  loreQuestion LoreQuestion?
 }
 
 model Answer {
@@ -30,4 +31,89 @@ model Answer {
   createdAt DateTime @default(now())
 
   @@index([cardId])
+}
+
+model GoogleConnection {
+  id                    String   @id @default("primary")
+  accountEmail          String?
+  encryptedRefreshToken String
+  scope                 String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model LoreSourceNote {
+  id           String         @id
+  name         String
+  path         String
+  focus        String
+  modifiedTime DateTime
+  contentHash  String
+  links        Json
+  active       Boolean        @default(true)
+  lastSeenAt   DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  questions    LoreQuestion[]
+
+  @@index([focus, active])
+}
+
+model LoreBatch {
+  id           String         @id @default(cuid())
+  focus        String
+  status       String         @default("draft")
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costMicros   Int
+  warnings     Json
+  createdAt    DateTime       @default(now())
+  reviewedAt   DateTime?
+  questions    LoreQuestion[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+model LoreGenerationLock {
+  id        String   @id
+  token     String
+  expiresAt DateTime
+}
+
+model LoreModelUsage {
+  id           String   @id @default(cuid())
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costMicros   Int
+  result       String
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model LoreQuestion {
+  id               String         @id @default(cuid())
+  batchId          String
+  batch            LoreBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  sourceNoteId     String
+  sourceNote       LoreSourceNote @relation(fields: [sourceNoteId], references: [id])
+  cardId           String?        @unique
+  card             Card?          @relation(fields: [cardId], references: [id])
+  prompt           String
+  rationale        String
+  gapType          String
+  category         String
+  fingerprint      String
+  contextSourceIds Json
+  sourceHash       String
+  status           String         @default("draft")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([batchId, status])
+  @@index([sourceNoteId, status])
+  @@index([fingerprint])
 }
