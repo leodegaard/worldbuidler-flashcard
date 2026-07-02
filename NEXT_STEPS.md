@@ -134,9 +134,13 @@ Implemented:
 - `GOOGLE_CLIENT_SECRET` is sensitive and present in Vercel Preview and
   Production. Vercel does not permit sensitive Development variables, so local
   testing still requires adding it manually to ignored `.env.local`.
-- Production deployment `4Gn7uwKW9UCrUdavszCVuspceahS` built successfully
-  from `main`; the build command applied all three migrations and ran the
-  idempotent 26-card seed.
+- Production `APP_PASSWORD` was rotated on 2026-07-02 as a sensitive Vercel
+  variable. Deployment `6ReCSgyyySP7xfeT5Derv3hhqTQV` rebuilt successfully
+  with the new value and was aliased to the canonical production domain. The
+  password value is intentionally not recorded in tracked files.
+- The production build command applied all migrations and ran the idempotent
+  26-card seed. Runtime and seed adapters both normalize legacy PostgreSQL SSL
+  aliases to explicit strict verification.
 
 ### OpenAI Platform — configured for deployed environments
 
