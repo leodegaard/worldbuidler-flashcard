@@ -9,10 +9,12 @@ Codex, or a human. Requirements live in
 Milestone 1 remains complete and live at
 `https://worldbuilding-flashcards.vercel.app`.
 
-Milestone 2, **Lore Lens**, is implemented on `codex/lore-lens` but is not yet
-production-ready because the real-vault preview flow has not yet been exercised.
-Do not merge the branch or mark milestone 2 complete until the preview is
-connected to Drive and the generation, approval, and stale-source flow passes.
+Milestone 2, **Lore Lens**, is merged to `main` through PR #1 and deployed to
+production at `https://worldbuilding-flashcards.vercel.app/lore-lens`. Vercel
+successfully built merge commit `86a0d6134e29a66411d89a20e981f075c2be6059`
+and the production route was verified to respond and redirect unauthenticated
+requests to `/login`. Keep milestone 2 marked in progress until one production
+real-vault batch passes generation, approval, deck, and question-quality review.
 
 A product-alignment review on 2026-07-02 clarified the intended outcome: this
 is a focused worldbuilding tool, not a recall deck, an upcoming-session prep
@@ -45,10 +47,9 @@ Lens as complete:
   stored as its context provenance. Per-question evidence and supporting sources
   are therefore not represented precisely.
 
-The branch is pushed to GitHub. A ready Vercel preview exists at
-`https://worldbuilding-flashc-git-a262cc-larserikodegaard-8796s-projects.vercel.app`.
-Vercel Deployment Protection currently requires the owner's Vercel login before
-that preview can be opened in a browser.
+The implementation branch was merged through
+`https://github.com/leodegaard/worldbuidler-flashcard/pull/1`. Production is now
+the verification target; the former branch preview is no longer authoritative.
 
 Implemented:
 
@@ -115,6 +116,10 @@ Implemented:
   the UI returned from `Building preview…` to its idle state, and monthly usage
   remained unchanged at $0.098. The scan took 83 seconds locally; this is Drive
   traversal time, not model time.
+- PR #1's Vercel preview check passed before merge. The production Vercel check
+  then passed for merge commit `86a0d61`, and an unauthenticated request to
+  `https://worldbuilding-flashcards.vercel.app/lore-lens` returned the expected
+  redirect to the production login page.
 - `npm audit` reports five moderate advisories inherited through the current
   Next.js/Prisma dependency trees. Suggested automated fixes incorrectly
   downgrade major framework versions, so no force-fix was applied.
@@ -129,9 +134,9 @@ Implemented:
 - `GOOGLE_CLIENT_SECRET` is sensitive and present in Vercel Preview and
   Production. Vercel does not permit sensitive Development variables, so local
   testing still requires adding it manually to ignored `.env.local`.
-- The stable branch preview now points to deployment
-  `worldbuilding-flashcards-dh4swx1hn.vercel.app`, which built successfully,
-  applied all three migrations, and seeded 26 curated cards.
+- Production deployment `4Gn7uwKW9UCrUdavszCVuspceahS` built successfully
+  from `main`; the build command applied all three migrations and ran the
+  idempotent 26-card seed.
 
 ### OpenAI Platform — configured for deployed environments
 
@@ -151,7 +156,7 @@ Already configured in all three Vercel environments:
 
 ## Immediate continuation steps
 
-1. Use `Preview API payload` on the deployed preview to review exactly what a
+1. Use `Preview API payload` in production to review exactly what a
    Balanced request would send. The first local real-vault preview confirmed
    that image-only and very sparse notes can rank as primary candidates; decide
    whether those should be excluded or enriched before spending another run.
@@ -173,10 +178,11 @@ Already configured in all three Vercel environments:
 5. Once question quality passes, approve a subset and verify 50/50 deck behavior,
    persistence, history, and source links. Test source-change archival using a
    disposable note.
-6. Inspect Vercel runtime logs and production database counts. The preview build
-   has already applied the migration and reseeded all 26 curated cards.
-7. Merge only after preview verification, then verify production, mark milestone
-   2 complete in the PRD, and rewrite this file.
+6. Inspect Vercel runtime logs and production database counts after the first
+   successful production batch.
+7. Mark milestone 2 complete in the PRD only after the production generation,
+   approval, deck, question-quality, and stale-source checks pass; then rewrite
+   this file around milestone 3.
 
 ## Remaining PRD work
 
